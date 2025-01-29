@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const apartamentoRoutes = require('./routes/apartamentoRoutes');
 const visitanteRoutes = require('./routes/visitanteRoutes');
 const pagoRoutes = require('./routes/pagoRoutes');
+const propietarioRoutes = require('./routes/propietarioRoutes');
 const informeRoutes = require('./routes/informeRoutes')
 const cookieParser = require('cookie-parser');
 const { sequelize } = require('./models');
@@ -26,6 +27,7 @@ app.use('/api', apartamentoRoutes);
 app.use('/api', visitanteRoutes);
 app.use('/api', pagoRoutes);
 app.use('/api', informeRoutes);
+app.use('/api', propietarioRoutes);
 
 async function startServer() {
   try {

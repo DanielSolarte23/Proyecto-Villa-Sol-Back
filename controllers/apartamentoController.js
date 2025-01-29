@@ -1,13 +1,12 @@
-const { Apartamento, User } = require('../models')
+const { Apartamento, Propietario } = require('../models')
 
-//Obtener los apartamentos
 exports.getApartamentos = async (req, res) => {
   try {
     const apartamentos = await Apartamento.findAll({
       include: {
-        model: User,
+        model: Propietario,
         as: 'propietario',
-        attributes: ['name']
+        attributes: ['nombre']
       }
     });
     res.json(apartamentos)
@@ -16,12 +15,32 @@ exports.getApartamentos = async (req, res) => {
   }
 };
 
+//obtener los apartamentos sin propietario 
+exports.getApartamentosSinPropietario = async (req, res) => {
+  try {
+    const apartamentos = await Apartamento.findAll({
+      where: {
+        propietarioId: null,
+      },
+      attributes: ['id', 'numeroDeApartamento', 'bloque', 'createdAt'],
+    });
+
+    res.status(200).json(apartamentos);
+  } catch (error) {
+    res.status(500).json({
+      error: 'Hubo un error al obtener los apartamentos sin propietario.',
+      detalles: error.message,
+    });
+  }
+};
+
+
 //obtener apartamento por su id
 exports.getApartamento = async (req, res) => {
   try {
     const apartamento = await Apartamento.findByPk(req.params.id, {
       include: {
-        model: User,
+        model: Propietario,
         as: 'propietario',
         attributes: ['name']
       }

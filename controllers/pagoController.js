@@ -1,52 +1,76 @@
-const { Pago, Apartamento, User } = require('../models'); 
+const { Pago, Apartamento, Propietario } = require('../models');
+
 
 // Crear un nuevo pago
 const crearPago = async (req, res) => {
   try {
-    const { monto, fechaVencimiento, estado, apartamentoId, propietarioId } = req.body;
+    const { propietarioId, monto, fechaVencimiento, estado } = req.body;
 
+    // Buscar el propietario con su apartamento
+    const propietario = await Propietario.findByPk(propietarioId, {
+      include: {
+        model: Apartamento,
+        as: 'apartamentos',
+        attributes: ['id'],
+      },
+    });
+
+    if (!propietario) {
+      return res.status(404).json({ error: 'Propietario no encontrado.' });
+    }
+
+    // Asignar el apartamentoId (puede ser null si no tiene apartamento)
+    const apartamentoId = propietario.apartamentos.length > 0 ? propietario.apartamentos[0].id : null;
+
+    // Crear el pago
     const nuevoPago = await Pago.create({
+      propietarioId,
+      apartamentoId,
       monto,
       fechaVencimiento,
       estado,
-      apartamentoId,
-      propietarioId,
     });
 
     return res.status(201).json(nuevoPago);
   } catch (error) {
-    console.error("Error al crear el pago:", error);
-    return res.status(500).json({ error: "Hubo un error al crear el pago.", detalles: error.message });
+    console.error('Error al crear el pago:', error);
+    return res.status(500).json({
+      error: 'Hubo un error al crear el pago.',
+      detalles: error.message,
+    });
   }
 };
 
-// Obtener todos los pagos
+
 const obtenerPagos = async (req, res) => {
   try {
     const pagos = await Pago.findAll({
       include: [
         {
-          model: Apartamento,
-          as: 'apartamento',
-          attributes: ['numeroDeApartamento'], 
+          model: Propietario,
+          as: 'propietario',
+          attributes: ['id', 'nombre'],
         },
         {
-          model: User,
-          as: 'propietario',
-          attributes: ['name'], 
+          model: Apartamento,
+          as: 'apartamento',
+          attributes: ['numeroDeApartamento', "bloque"],
         },
       ],
     });
 
+    console.log(pagos);
     return res.status(200).json(pagos);
   } catch (error) {
-    console.error("Error al obtener pagos:", error);
+    console.error('Error al obtener los pagos:', error);
     return res.status(500).json({
-      error: "Hubo un error al obtener los pagos.",
+      error: 'Hubo un error al obtener los pagos.',
       detalles: error.message,
     });
   }
 };
+
+
 
 
 // Obtener un pago por su ID
@@ -54,31 +78,46 @@ const obtenerPago = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const pago = await Pago.findByPk(id, {
-      include: [
-        {
-          model: Apartamento,
-          as: 'apartamento',
-          attributes: ['numeroDeApartamento'],
-        },
-        {
-          model: User,
-          as: 'propietario',
-          attributes: ['name'], 
-        },
-      ],
-    });
+    const pago = await Pago.sequelize.query(
+      `
+      SELECT 
+        p.id AS propietarioId,
+        p.nombre AS propietarioNombre,
+        a.numeroDeApartamento,  -- Esto será NULL si no hay apartamento asignado
+        pa.id AS pagoId,
+        pa.monto,
+        pa.fechaVencimiento,
+        pa.estado AS estadoPago
+      FROM 
+        pagos pa
+      LEFT JOIN 
+        propietarios p ON pa.propietarioId = p.id
+      LEFT JOIN 
+        apartamentos a ON a.propietarioId = p.id
+      WHERE
+        pa.id = :id
+      `,
+      {
+        replacements: { id },
+        type: Pago.sequelize.QueryTypes.SELECT,
+        raw: true, // Esto asegura que los resultados no estén envueltos en Sequelize
+      }
+    );
 
-    if (!pago) {
+    // Si no se encuentra el pago, retornamos un error
+    if (pago.length === 0) {
       return res.status(404).json({ error: "Pago no encontrado." });
     }
 
-    return res.status(200).json(pago);
+    // Si se encuentra el pago, lo retornamos
+    return res.status(200).json(pago[0]);
   } catch (error) {
     console.error("Error al obtener el pago:", error);
     return res.status(500).json({ error: "Hubo un error al obtener el pago.", detalles: error.message });
   }
 };
+
+
 
 // Actualizar un pago
 const actualizarPago = async (req, res) => {

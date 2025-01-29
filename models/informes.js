@@ -4,7 +4,6 @@ module.exports = (sequelize, DataTypes) => {
   const Informe = sequelize.define('Informe', {
     cargo: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     motivo: {
       type: DataTypes.STRING,

@@ -27,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
 
+  Visitante.beforeSave((visitante) => {
+    visitante.estado = visitante.fechaHoraSalida ? 'terminado' : 'en ejecucion';
+  });  
+
   // Relación con Apartamento
   Visitante.associate = (models) => {
     Visitante.belongsTo(models.Apartamento, {

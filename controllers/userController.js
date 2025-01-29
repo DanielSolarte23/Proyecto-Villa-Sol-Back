@@ -59,22 +59,55 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-
-exports.getPropietarios = async (req, res) => {
+exports.getInformesPorUsuario = async (req, res) => {
   try {
-    const propietarios = await User.findAll({
-      include:{
-        model: Apartamento,
-        as:'apartamento',
-        attributes:['numeroDeApartamento']
-      },
-      where: { role: 'propietario' }
+      const { usuarioId } = req.params;
 
-    });
+      // Buscar todos los informes del usuario
+      const informes = await Informe.findAll({
+          where: { usuarioId }, 
+          include: {
+              model: User,
+              as: 'remitente', 
+              attributes: ['name'], 
+          },
+      });
 
-    return res.status(200).json(propietarios);
+
+      if (!informes.length) {
+          return res.status(404).json({ error: "No se encontraron informes para este usuario." });
+      }
+      const informesConNombres = informes.map((informe) => ({
+          ...informe.toJSON(),
+          remitenteName: informe.remitente?.name || null, // Agregar el nombre del remitente
+      }));
+
+      return res.status(200).json(informesConNombres);
   } catch (error) {
-    console.error("Error al obtener propietarios:", error);
-    return res.status(500).json({ error: "Hubo un error al obtener los propietarios." });
+      console.error("Error al obtener los informes:", error);
+      return res.status(500).json({
+          error: "Hubo un error al obtener los informes.",
+          detalles: error.message,
+      });
   }
 };
+
+
+// exports.getPropietarios = async (req, res) => {
+//   try {
+//     const propietarios = await User.findAll({
+//       include:{
+//         model: Apartamento,
+//         as:'apartamento',
+//         attributes:['numeroDeApartamento']
+//       },
+//       where: { role: 'propietario' }
+
+//     });
+
+//     return res.status(200).json(propietarios);
+//   } catch (error) {
+//     console.error("Error al obtener propietarios:", error);
+//     return res.status(500).json({ error: "Hubo un error al obtener los propietarios." });
+//   }
+// };

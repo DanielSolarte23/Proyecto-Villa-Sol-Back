@@ -5,6 +5,7 @@ const apartamentoController = require('../controllers/apartamentoController');
 
 router.get('/apartamentos', apartamentoController.getApartamentos);
 router.get('/apartamentos/:id', apartamentoController.getApartamentos);
+router.get('/apartamentosSinPropietario', apartamentoController.getApartamentosSinPropietario);
 router.post('/apartamentos', apartamentoController.crearApartamento);
 
 

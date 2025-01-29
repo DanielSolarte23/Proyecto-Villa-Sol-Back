@@ -35,30 +35,33 @@ const obtenerVisitante = async (req, res) => {
     res.status(500).json({ error: 'Hubo un error al obtener el visitante.' });
   }
 };
-
+ 
 // Crear un nuevo Visitante (POST)
 const crearVisitante = async (req, res) => {
-    try {
-      const { nombre, cedula, fechaHoraIngreso, fechaHoraSalida, estado, apartamentoId } = req.body;
-  
-      if (!nombre || !cedula || !fechaHoraIngreso || !estado || !apartamentoId) {
-        return res.status(400).json({ error: "Faltan campos obligatorios." });
-      }
-  
-      const nuevoVisitante = await Visitante.create({
-        nombre,
-        cedula,
-        fechaHoraIngreso,
-        fechaHoraSalida,
-        estado,
-        apartamentoId,
-      });
-      res.status(201).json(nuevoVisitante);
-    } catch (error) {
-      console.error("Error al crear visitante:", error); // Para ver detalles del error en la consola
-      res.status(500).json({ error: 'Hubo un error al crear el visitante.', detalles: error.message });
+  try {
+    const { nombre, cedula, fechaHoraIngreso, fechaHoraSalida, apartamentoId } = req.body;
+
+    if (!nombre || !cedula || !fechaHoraIngreso || !apartamentoId) {
+      return res.status(400).json({ error: "Faltan campos obligatorios." });
     }
-  };
+
+    const estado = fechaHoraSalida ? 'terminado' : 'en ejecucion';
+
+    const nuevoVisitante = await Visitante.create({
+      nombre,
+      cedula,
+      fechaHoraIngreso,
+      fechaHoraSalida,
+      estado,
+      apartamentoId,
+    });
+    res.status(201).json(nuevoVisitante);
+  } catch (error) {
+    console.error("Error al crear visitante:", error);
+    res.status(500).json({ error: 'Hubo un error al crear el visitante.', detalles: error.message });
+  }
+};
+
   
 
 // Actualizar un Visitante existente (PUT o PATCH)

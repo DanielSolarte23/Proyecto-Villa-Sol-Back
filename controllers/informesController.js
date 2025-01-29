@@ -19,9 +19,9 @@ const getInformes = async (req, res) => {
     try {
         const informes = await Informe.findAll({
             include: {
-                model: User, // Modelo asociado
-                as: 'remitente', // Alias definido en la asociación
-                attributes: ['name'], // Atributos que deseas incluir (en este caso, solo el nombre)
+                model: User, 
+                as: 'remitente', 
+                attributes: ['name', 'id','role'],
             },
         });
 
@@ -29,7 +29,7 @@ const getInformes = async (req, res) => {
     } catch (error) {
         console.error("Error al obtener los informes:", error);
         return res.status(500).json({
-            error: "Hubo un error al obtener los informes.",
+            error: "Hubo un error al obtener los informes .",
             detalles: error.message,
         });
     }
@@ -43,7 +43,7 @@ const getInforme = async (req, res) => {
             include: {
                 model: User,
                 as: 'remitente',
-                attributes: ['name'],
+                attributes: ['name', 'id'],
             },
         });
 
@@ -51,12 +51,7 @@ const getInforme = async (req, res) => {
             return res.status(404).json({ error: "Informe no encontrado" });
         }
 
-        const informeConNombre = {
-            ...informe.toJSON(),
-            remitenteName: informe.remitente?.name || null,
-        };
-
-        return res.status(200).json(informeConNombre);
+        return res.status(200).json(informe);  // Devolver 'informe' directamente aquí
     } catch (error) {
         console.error("Error al obtener el informe:", error);
         return res.status(500).json({
@@ -65,6 +60,8 @@ const getInforme = async (req, res) => {
         });
     }
 };
+
+
 
 
 const actualizarInforme = async (req, res) => {
@@ -128,6 +125,40 @@ const actualizarEstado = async (req, res) => {
     }
 };
 
+const getInformesPorRemitente = async (req, res) => {
+    try {
+        const { remitenteId } = req.params; // Extrae remitenteId desde req.params
+
+        // Verifica que remitenteId no sea undefined
+        if (!remitenteId) {
+            return res.status(400).json({ error: "El parámetro remitenteId es requerido." });
+        }
+
+        // Realiza la consulta
+        const informes = await Informe.findAll({
+            where: {
+                remitenteId: remitenteId, // Filtra por remitenteId
+            },
+        });
+
+        if (!informes.length) {
+            return res.status(404).json({
+                error: "No se encontraron informes para este remitente.",
+            });
+        }
+
+        return res.status(200).json(informes);
+    } catch (error) {
+        console.error("Error al obtener informes:", error);
+        return res.status(500).json({
+            error: "Hubo un error al obtener los informes.",
+            detalles: error.message,
+        });
+    }
+};
+
+
+
 
 module.exports = {
     crearInforme,
@@ -135,5 +166,6 @@ module.exports = {
     getInforme,
     actualizarInforme,
     eliminarInforme,
-    actualizarEstado
+    actualizarEstado,
+    getInformesPorRemitente,
 };

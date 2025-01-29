@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     username: {
       type: DataTypes.STRING,
       unique: true,
-      allowNull: true, // Cambiar a true para permitir que sea NULL
+      allowNull: true,
       validate: {
         notEmpty: {
           msg: 'El nombre de usuario no puede estar vacío',
@@ -28,43 +28,27 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isIn: [['administrador', 'personal de seguridad', 'propietario']], // Solo se permiten estos valores
+        isIn: [['administrador', 'personal de seguridad']], 
       },
     },
   }, {
     hooks: {
       beforeCreate: async (user) => {
-        // Si no es propietario, encriptamos la contraseña
-        if (user.role !== 'propietario') {
+        if (user.password) {
           user.password = await bcrypt.hash(user.password, 10);
-        } else {
-          // Si es propietario, eliminamos los campos de contraseña y usuario
-          user.username = null; // Se establece a null
-          user.password = null; // Se establece a null
         }
       },
     },
   });
 
-  // Método de instancia para validar contraseñas
+
   User.prototype.validatePassword = async function(password) {
     if (!this.password) {
-      return false; // Si no hay contraseña (por ejemplo, para 'propietario'), devolvemos falso
+      return false; 
     }
     return await bcrypt.compare(password, this.password);
   };
 
-  // Definir las relaciones
-  User.associate = (models) => {
-    User.hasOne(models.Apartamento, {
-      foreignKey: 'propietarioId',
-      as: 'apartamento',
-    });
-    User.hasMany(models.Informe, {
-      foreignKey: 'remitenteName',
-      as: 'informes',
-    });
-  };
-
   return User;
 };
+
