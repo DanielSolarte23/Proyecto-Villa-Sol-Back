@@ -19,9 +19,9 @@ const getInformes = async (req, res) => {
     try {
         const informes = await Informe.findAll({
             include: {
-                model: User, 
-                as: 'remitente', 
-                attributes: ['name', 'id','role'],
+                model: User,
+                as: 'remitente',
+                attributes: ['name', 'id', 'role'],
             },
         });
 
@@ -127,9 +127,9 @@ const actualizarEstado = async (req, res) => {
 
 const getInformesPorRemitente = async (req, res) => {
     try {
-        const { remitenteId } = req.params; // Extrae remitenteId desde req.params
+        const { remitenteId } = req.params;
 
-        // Verifica que remitenteId no sea undefined
+
         if (!remitenteId) {
             return res.status(400).json({ error: "El parámetro remitenteId es requerido." });
         }
@@ -138,6 +138,11 @@ const getInformesPorRemitente = async (req, res) => {
         const informes = await Informe.findAll({
             where: {
                 remitenteId: remitenteId, // Filtra por remitenteId
+            },
+            include: {
+                model: User,
+                as: 'remitente',
+                attributes: ['name', 'id', 'role'],
             },
         });
 
